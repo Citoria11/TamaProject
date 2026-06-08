@@ -14,3 +14,4 @@ android.permissions = SYSTEM_ALERT_WINDOW
 
 # Optimized for modern 64-bit Android phones
 android.archs = arm64-v8a
+android.accept_sdk_license = True
