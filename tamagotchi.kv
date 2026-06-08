@@ -1,0 +1,21 @@
+<TamagotchiLayout>:
+    orientation: 'vertical'
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1  
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    Label:
+        text: "(◕‿◕)\n  ||  ||"
+        font_size: '60sp'
+        color: 0, 0, 0, 1  
+        halign: 'center'
+
+    Button:
+        text: "Feed Scratch"
+        size_hint_y: 0.2
+        background_normal: ''
+        background_color: 0, 0, 0, 1
+        color: 1, 1, 1, 1
