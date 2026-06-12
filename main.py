@@ -75,18 +75,20 @@ class TamagotchiApp(App):
     def _pet_face_text(self):
         blink = self.animation_frame % 4 < 2
         if self.pet.dead:
-            return "(x_x)\n  RIP"
+            return "(x_x)\n CRITICAL FAIL"
         if self.pet.sick:
-            return "(>_<)\n  ?"
+            return "( ¬_¬ )\n  BLOATED"
+        if self.pet.health < 30:
+            return "(>_<)\n STORAGE CRITICAL"
+        if self.pet.stress > 70:
+            return "( ;>_< ;)\n OVERHEATING" if blink else "( ;>_<;)\n THERMAL ALERT"
+        if self.pet.happiness < 40:
+            return "( ⊙_⊙ )\n NO SIGNAL" if blink else "( ⊙⊙ )\n DISCONNECTED"
+        if self.pet.energy < 30:
+            return "(~_~)\n  LOW BATT" if blink else "(~_-)\n  CRITICAL"
         if self.pet.mood == "Happy":
-            return "(^_^)\n  ~" if blink else "(^.^)\n  ~"
-        if self.pet.mood == "Stressed":
-            return "(-_- )\n  !!" if blink else "(-_-;)\n  !!"
-        if self.pet.mood == "Tired":
-            return "(~_~)\n  zz" if blink else "(~_-)\n  zZ"
-        if self.pet.mood == "Lonely":
-            return "(◕︵◕)\n  ..." if blink else "(◕︵◕)\n  ..."
-        return "(◕‿◕)\n  ||  ||" if blink else "(◕_◕)\n  ||  ||"
+            return "( ＾∇＾)\n OPTIMIZED" if blink else "( ^_^)\n  RUNNING"
+        return "( ◕ᴗ◕ )\n  STABLE" if blink else "( ◕_◕ )\n  NORMAL"
 
     def _pet_face_color(self):
         if self.pet.dead:
@@ -103,18 +105,22 @@ class TamagotchiApp(App):
             return (0.3, 0.3, 0.4, 1)
         return (0.1, 0.2, 0.4, 1)
 
-    def on_feed(self):
+    def on_purge(self):
         if self.pet.dead:
             self.pet.revive()
         else:
-            self.pet.feed()
+            self.pet.purge()
         self.update_ui(self.device_stats.read_device_stats())
 
-    def on_rest(self):
-        self.pet.rest()
+    def on_cool_down(self):
+        self.pet.cool_down()
         self.update_ui(self.device_stats.read_device_stats())
 
-    def on_check(self):
+    def on_decongest(self):
+        self.pet.decongest()
+        self.update_ui(self.device_stats.read_device_stats())
+
+    def on_diagnose(self):
         self.pet.push_message("Checked device state.", 3)
         self.update_ui(self.device_stats.read_device_stats())
 

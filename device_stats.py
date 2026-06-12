@@ -2,6 +2,7 @@ import socket
 import sys
 import time
 import urllib.request
+import os
 
 try:
     import psutil
@@ -22,6 +23,8 @@ class DeviceStats:
         is_charging = self._read_charging_state()
         cpu_pct = self._read_cpu_percent()
         memory_pct = self._read_memory_percent()
+        disk_free_pct = self._read_disk_space_percent()
+        temperature = self._read_temperature()
         network_online, network_latency = self._probe_network()
 
         return {
@@ -29,6 +32,8 @@ class DeviceStats:
             "is_charging": is_charging,
             "cpu_pct": cpu_pct,
             "memory_pct": memory_pct,
+            "disk_free_pct": disk_free_pct,
+            "temperature": temperature,
             "network_online": network_online,
             "network_latency": network_latency,
         }
@@ -133,6 +138,26 @@ class DeviceStats:
         except Exception:
             pass
 
+        return None
+
+    def _read_disk_space_percent(self):
+        try:
+            stat = os.statvfs("/")
+            total = stat.f_blocks * stat.f_frsize
+            free = stat.f_bavail * stat.f_frsize
+            used_pct = (total - free) * 100.0 / total
+            return min(100, max(0, used_pct))
+        except Exception:
+            return None
+
+    def _read_temperature(self):
+        if _HAS_PSUTIL:
+            try:
+                temps = psutil.sensors_temperatures()
+                if "coretemp" in temps and temps["coretemp"]:
+                    return temps["coretemp"][0].current
+            except Exception:
+                pass
         return None
 
     def _probe_network(self):

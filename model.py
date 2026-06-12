@@ -241,25 +241,33 @@ class Tamagotchi:
         self._refresh_state()
         self._update_mood()
 
-    def feed(self):
+    def purge(self):
+        """Execute cache purge protocol."""
         if self.dead:
             return
-
-        self.hunger -= 18
-        self.energy += 12
-        self.happiness += 10
-        self.health += 2
-        self.push_message("Yum, I feel better!", 4)
+        import gc
+        gc.collect()
+        self.health += 15
+        self.stress -= 10
+        self.push_message("Purge complete. Cache cleared. System optimized.", 4)
         self._refresh_state()
 
-    def rest(self):
+    def cool_down(self):
+        """Execute thermal management protocol."""
         if self.dead:
             return
+        self.stress -= 15
+        self.health += 8
+        self.push_message("Thermal management active. Stress reduced.", 4)
+        self._refresh_state()
 
-        self.energy += 16
-        self.stress -= 12
-        self.happiness += 5
-        self.push_message("Resting feels good. I'm recharging.", 4)
+    def decongest(self):
+        """Execute network optimization protocol."""
+        if self.dead:
+            return
+        self.happiness += 12
+        self.stress -= 5
+        self.push_message("Network stack refreshed. Latency optimized.", 4)
         self._refresh_state()
 
     def revive(self):

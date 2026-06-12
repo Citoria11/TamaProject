@@ -193,18 +193,23 @@
             height: dp(48)
 
             Button:
-                text: 'Feed'
-                on_press: app.on_feed()
-                background_color: 0.2, 0.5, 0.95, 1
+                text: 'Purge'
+                on_press: app.on_purge()
+                background_color: 0.8, 0.4, 0.2, 1
                 color: 1, 1, 1, 1
             Button:
-                text: 'Rest'
-                on_press: app.on_rest()
-                background_color: 0.2, 0.7, 0.35, 1
+                text: 'Cool Down'
+                on_press: app.on_cool_down()
+                background_color: 0.2, 0.6, 0.9, 1
                 color: 1, 1, 1, 1
             Button:
-                text: 'Check'
-                on_press: app.on_check()
+                text: 'Decongest'
+                on_press: app.on_decongest()
+                background_color: 0.3, 0.7, 0.4, 1
+                color: 1, 1, 1, 1
+            Button:
+                text: 'Diagnose'
+                on_press: app.on_diagnose()
                 background_color: 0.55, 0.55, 0.9, 1
                 color: 1, 1, 1, 1
 
