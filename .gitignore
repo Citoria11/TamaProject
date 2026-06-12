@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.swo
+*.db
+*.sqlite
+*.log
+*.json
+*.tmp
+/tamagotchi_store.json

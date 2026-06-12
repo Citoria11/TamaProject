@@ -1,21 +1,230 @@
 <TamagotchiLayout>:
     orientation: 'vertical'
+    padding: dp(12)
+    spacing: dp(10)
     canvas.before:
         Color:
-            rgba: 1, 1, 1, 1  
+            rgba: 1, 1, 1, 1
         Rectangle:
             pos: self.pos
             size: self.size
 
-    Label:
-        text: "(◕‿◕)\n  ||  ||"
-        font_size: '60sp'
-        color: 0, 0, 0, 1  
-        halign: 'center'
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint_y: 0.34
+        padding: dp(12)
+        spacing: dp(10)
+        canvas.before:
+            Color:
+                rgba: 0.95, 0.95, 1, 1
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [16]
 
-    Button:
-        text: "Feed Scratch"
-        size_hint_y: 0.2
-        background_normal: ''
-        background_color: 0, 0, 0, 1
-        color: 1, 1, 1, 1
+        Label:
+            id: pet_face
+            text: "(◕‿◕)\n  ||  ||"
+            font_size: '52sp'
+            color: 0, 0, 0, 1
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.size
+
+        Label:
+            id: mood
+            text: "Mood: Okay"
+            font_size: '20sp'
+            color: 0.2, 0.2, 0.35, 1
+            size_hint_y: None
+            height: self.texture_size[1]
+
+        Label:
+            id: level_text
+            text: "Level 1\nAge 1"
+            font_size: '16sp'
+            color: 0.2, 0.2, 0.35, 1
+            halign: 'left'
+            valign: 'middle'
+            text_size: self.size
+
+    GridLayout:
+        cols: 1
+        size_hint_y: 0.38
+        spacing: dp(8)
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: dp(120)
+            spacing: dp(6)
+
+            Label:
+                text: 'Energy'
+                size_hint_y: None
+                height: self.texture_size[1]
+                color: 0, 0, 0, 1
+            ProgressBar:
+                id: energy_bar
+                max: 100
+                value: 70
+                size_hint_y: None
+                height: dp(16)
+            Label:
+                id: energy_value
+                text: '70%'
+                size_hint_y: None
+                height: self.texture_size[1]
+                color: 0, 0, 0, 1
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: dp(120)
+            spacing: dp(6)
+
+            Label:
+                text: 'Health'
+                size_hint_y: None
+                height: self.texture_size[1]
+                color: 0, 0, 0, 1
+            ProgressBar:
+                id: health_bar
+                max: 100
+                value: 85
+                size_hint_y: None
+                height: dp(16)
+            Label:
+                id: health_value
+                text: '85%'
+                size_hint_y: None
+                height: self.texture_size[1]
+                color: 0, 0, 0, 1
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: dp(120)
+            spacing: dp(6)
+
+            Label:
+                text: 'Happiness'
+                size_hint_y: None
+                height: self.texture_size[1]
+                color: 0, 0, 0, 1
+            ProgressBar:
+                id: happiness_bar
+                max: 100
+                value: 75
+                size_hint_y: None
+                height: dp(16)
+            Label:
+                id: happiness_value
+                text: '75%'
+                size_hint_y: None
+                height: self.texture_size[1]
+                color: 0, 0, 0, 1
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: dp(120)
+            spacing: dp(6)
+
+            Label:
+                text: 'Stress'
+                size_hint_y: None
+                height: self.texture_size[1]
+                color: 0, 0, 0, 1
+            ProgressBar:
+                id: stress_bar
+                max: 100
+                value: 20
+                size_hint_y: None
+                height: dp(16)
+            Label:
+                id: stress_value
+                text: '20%'
+                size_hint_y: None
+                height: self.texture_size[1]
+                color: 0, 0, 0, 1
+
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint_y: 0.18
+        spacing: dp(8)
+
+        BoxLayout:
+            spacing: dp(8)
+
+            Button:
+                text: 'Feed'
+                on_press: app.on_feed()
+            Button:
+                text: 'Rest'
+                on_press: app.on_rest()
+            Button:
+                text: 'Check'
+                on_press: app.on_check()
+
+        GridLayout:
+            cols: 2
+            row_default_height: dp(24)
+            spacing: dp(6)
+
+            Label:
+                text: 'Battery:'
+                color: 0, 0, 0, 1
+            Label:
+                id: battery_value
+                text: 'N/A'
+                color: 0, 0, 0, 1
+
+            Label:
+                text: 'Charging:'
+                color: 0, 0, 0, 1
+            Label:
+                id: charge_value
+                text: 'No'
+                color: 0, 0, 0, 1
+
+            Label:
+                text: 'CPU:'
+                color: 0, 0, 0, 1
+            Label:
+                id: cpu_value
+                text: 'N/A'
+                color: 0, 0, 0, 1
+
+            Label:
+                text: 'Memory:'
+                color: 0, 0, 0, 1
+            Label:
+                id: memory_value
+                text: 'N/A'
+                color: 0, 0, 0, 1
+
+            Label:
+                text: 'Network:'
+                color: 0, 0, 0, 1
+            Label:
+                id: network_value
+                text: 'Offline'
+                color: 0, 0, 0, 1
+
+            Label:
+                text: 'Latency:'
+                color: 0, 0, 0, 1
+            Label:
+                id: network_latency
+                text: 'N/A'
+                color: 0, 0, 0, 1
+
+    Label:
+        id: current_status
+        text: 'Ready to monitor the phone.'
+        size_hint_y: None
+        height: self.texture_size[1]
+        color: 0.15, 0.15, 0.35, 1
+        halign: 'center'
+        text_size: self.width, None

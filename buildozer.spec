@@ -5,12 +5,12 @@ package.domain = org.h
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 0.1
-requirements = python3,kivy
+requirements = python3,kivy,plyer
 orientation = portrait
 fullscreen = 0
 
-# This is the crucial permission that lets the app float over your screen
-android.permissions = SYSTEM_ALERT_WINDOW
+# Permissions for battery, network and device telemetry access
+android.permissions = SYSTEM_ALERT_WINDOW,INTERNET
 
 # Optimized for modern 64-bit Android phones
 android.archs = arm64-v8a
