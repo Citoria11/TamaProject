@@ -32,7 +32,6 @@ class Tamagotchi:
         self.cpu_history = deque(maxlen=30)
         self.memory_history = deque(maxlen=30)
         self.latency_history = deque(maxlen=30)
-        self.energy_drain_rate = 1.0
         self.health_rate = 0.0
         self.happiness_rate = 0.0
         self.stress_rate = 0.0
@@ -130,77 +129,64 @@ class Tamagotchi:
         battery_pct = device_stats.get("battery_pct")
         cpu_pct = device_stats.get("cpu_pct")
         memory_pct = device_stats.get("memory_pct")
+        disk_free_pct = device_stats.get("disk_free_pct")
+        temperature = device_stats.get("temperature")
         network_online = device_stats.get("network_online")
         latency = device_stats.get("network_latency")
         is_charging = device_stats.get("is_charging")
 
         self._record_history(battery_pct, cpu_pct, memory_pct, latency)
 
-        self.energy_drain_rate = 1.0
-        self.health_rate = 0.0
-        self.happiness_rate = 0.0
-        self.stress_rate = 0.0
-
+        # Direct hardware-to-stat mapping
         if battery_pct is not None:
-            if is_charging:
-                self.energy_drain_rate = -1.5
-                self.happiness_rate += 0.8
-                self.stress_rate -= 0.3
-                if self.message_timer <= 0:
-                    self.push_message("Oh, time for a nap! (Zzz)", 3)
-            else:
-                charge_penalty = max(0.0, (50 - battery_pct) * 0.02)
-                self.energy_drain_rate += charge_penalty
-                if battery_pct < 25:
-                    self.stress_rate += 0.4
-                    self.happiness_rate -= 0.5
-                    if self.message_timer <= 0:
-                        self.push_message("I'm low on power and feeling tired.", 4)
-                elif battery_pct < 45:
-                    self.happiness_rate -= 0.2
+            self.energy = battery_pct
+        
+        if disk_free_pct is not None:
+            disk_used_pct = 100 - disk_free_pct
+            self.health = max(0, 100 - disk_used_pct)
+        
+        # Rate modifiers for other stats
+        self.stress_rate = 0.0
+        self.happiness_rate = 0.0
+
+        if is_charging:
+            self.stress_rate -= 0.5
+            self.happiness_rate += 0.5
+            if self.message_timer <= 0:
+                self.push_message("Charging: thermal relief engaged.", 3)
 
         if cpu_pct is not None:
             cpu_load = self.cpu_avg if self.cpu_avg is not None else cpu_pct
-            focus_gain = max(0.0, min(1.0, (cpu_load - 40) * 0.02))
-            self.stress_rate += max(0.0, (cpu_load - 60) * 0.03)
-            self.energy_drain_rate += focus_gain * 0.8
-            if cpu_load > 70:
-                self.health_rate += 0.15
+            self.stress_rate += max(0.0, (cpu_load - 60) * 0.05)
+            if cpu_load > 80:
                 if self.message_timer <= 0:
-                    self.push_message("I'm focusing hard — it's like exercise!", 3)
-            if cpu_load > 85:
-                self.health_rate -= 0.4
-                self.happiness_rate -= 0.4
-                if self.message_timer <= 0:
-                    self.push_message("Too much workload is exhausting.", 4)
+                    self.push_message("CPU load critical: thermal throttling risk.", 4)
 
-        if memory_pct is not None:
-            mem_load = self.memory_avg if self.memory_avg is not None else memory_pct
-            if mem_load > 85:
-                self.health_rate -= 0.3
-                self.happiness_rate -= 0.5
+        if temperature is not None:
+            if temperature > 85:
+                self.stress_rate += 1.5
                 if self.message_timer <= 0:
-                    self.push_message("My core feels bloated; I need a break.", 4)
-            elif len(self.memory_history) > 1 and self.memory_history[-1] < self.memory_history[-2]:
-                self.health_rate += 0.2
-                self.happiness_rate += 0.4
+                    self.push_message("System overheating! Cooling required.", 4)
+            elif temperature > 75:
+                self.stress_rate += 0.8
                 if self.message_timer <= 0:
-                    self.push_message("I feel lighter after memory cleared.", 3)
+                    self.push_message("Temperature elevated. Monitoring thermal state.", 3)
+
+        if disk_free_pct is not None and disk_free_pct < 15:
+            if self.message_timer <= 0:
+                self.push_message("Storage critical! Purge cached data immediately.", 5)
 
         if network_online is False:
             self.happiness_rate -= 1.0
             if self.message_timer <= 0:
-                self.push_message("Offline time makes me lonely.", 4)
-        elif network_online is True:
-            if latency is not None:
-                if latency > 1.2:
-                    self.happiness_rate -= 0.6
-                    if self.message_timer <= 0:
-                        self.push_message("The network is laggy and frustrating.", 4)
-                else:
-                    self.happiness_rate += 0.4
-                    if self.message_timer <= 0:
-                        self.push_message("Smooth network — I feel social!", 3)
+                self.push_message("Network offline. Attempting to decongest.", 4)
+        elif network_online is True and latency is not None:
+            if latency > 1.5:
+                self.happiness_rate -= 0.7
+                if self.message_timer <= 0:
+                    self.push_message("Network congestion detected. Decongest protocol recommended.", 4)
+            else:
+                self.happiness_rate += 0.3
 
         self._refresh_state()
 
@@ -209,10 +195,9 @@ class Tamagotchi:
             return
 
         self.hunger += 0.4 * dt
-        if self.energy_drain_rate < 0:
-            self.energy += -self.energy_drain_rate * dt
-        else:
-            self.energy -= self.energy_drain_rate * dt
+
+        # Energy is directly mapped from battery in apply_device(), don't drain it here
+        # Just apply health, happiness, and stress rates
 
         self.health += self.health_rate * dt
         self.happiness += self.happiness_rate * dt
@@ -220,15 +205,14 @@ class Tamagotchi:
 
         if self.hunger > 80:
             self.health -= 0.8 * dt
-            self.energy -= 0.8 * dt
             if self.message_timer <= 0:
-                self.push_message("I'm too hungry. Feed me soon.", 4)
+                self.push_message("Storage fragmented. Purge recommended.", 4)
 
         if self.stress > 65 and self.health > 20:
             self.health -= 0.15 * dt
 
         if self.happiness < 30 and self.message_timer <= 0:
-            self.push_message("I need some attention.", 4)
+            self.push_message("Network connectivity lost. Check signal.", 4)
 
         self.age += dt
         self.level = 1 + int(self.age // 30)
