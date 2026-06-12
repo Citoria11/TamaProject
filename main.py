@@ -16,9 +16,10 @@ class TamagotchiApp(App):
         self.store = JsonStore("tamagotchi_store.json")
         self.pet = Tamagotchi.load(self.store)
         self.device_stats = DeviceStats()
+        self.animation_frame = 0
 
         self.root = TamagotchiLayout()
-        Clock.schedule_interval(self.update_state, 5)
+        Clock.schedule_interval(self.update_state, 1)
         Clock.schedule_once(self.update_state, 0)
         return self.root
 
@@ -28,7 +29,8 @@ class TamagotchiApp(App):
     def update_state(self, dt):
         device = self.device_stats.read_device_stats()
         self.pet.apply_device(device)
-        self.pet.tick()
+        self.pet.tick(dt)
+        self.animation_frame = (self.animation_frame + 1) % 4
         self.update_ui(device)
         self.save_state()
 
@@ -53,26 +55,53 @@ class TamagotchiApp(App):
         self.root.ids.charge_value.text = "Yes" if device.get("is_charging") else "No"
         self.root.ids.cpu_value.text = f"{device['cpu_pct']:.0f}%" if device.get("cpu_pct") is not None else "N/A"
         self.root.ids.memory_value.text = f"{device['memory_pct']:.0f}%" if device.get("memory_pct") is not None else "N/A"
-        self.root.ids.network_value.text = "Online" if device.get("network_online") else "Offline"
+        network_online = device.get("network_online")
+        if network_online is True:
+            self.root.ids.network_value.text = "Online"
+        elif network_online is False:
+            self.root.ids.network_value.text = "Offline"
+        else:
+            self.root.ids.network_value.text = "Unknown"
+
         self.root.ids.network_latency.text = f"{device['network_latency']:.2f}s" if device.get("network_latency") is not None else "N/A"
 
         self.root.ids.mood.text = f"Mood: {self.pet.mood}"
-        self.root.ids.current_status.text = self.pet.message
+        self.root.ids.current_status.text = self.pet.status_text()
+        self.root.ids.device_status.text = self.pet.message
         self.root.ids.pet_face.text = self._pet_face_text()
+        self.root.ids.pet_face.color = self._pet_face_color()
         self.root.ids.level_text.text = f"Level {self.pet.level}\nAge {self.pet.age}"
 
     def _pet_face_text(self):
+        blink = self.animation_frame % 4 < 2
         if self.pet.dead:
             return "(x_x)\n  RIP"
         if self.pet.sick:
             return "(>_<)\n  ?"
         if self.pet.mood == "Happy":
-            return "(^_^)\n  ~"
+            return "(^_^)\n  ~" if blink else "(^.^)\n  ~"
         if self.pet.mood == "Stressed":
-            return "(-_-)\n  !!"
+            return "(-_- )\n  !!" if blink else "(-_-;)\n  !!"
         if self.pet.mood == "Tired":
-            return "(~_~)\n  zz"
-        return "(◕‿◕)\n  ||  ||"
+            return "(~_~)\n  zz" if blink else "(~_-)\n  zZ"
+        if self.pet.mood == "Lonely":
+            return "(◕︵◕)\n  ..." if blink else "(◕︵◕)\n  ..."
+        return "(◕‿◕)\n  ||  ||" if blink else "(◕_◕)\n  ||  ||"
+
+    def _pet_face_color(self):
+        if self.pet.dead:
+            return (0.5, 0.5, 0.5, 1)
+        if self.pet.sick:
+            return (0.8, 0.2, 0.2, 1)
+        if self.pet.mood == "Happy":
+            return (0.1, 0.5, 0.2, 1)
+        if self.pet.mood == "Stressed":
+            return (0.7, 0.15, 0.15, 1)
+        if self.pet.mood == "Tired":
+            return (0.3, 0.3, 0.6, 1)
+        if self.pet.mood == "Lonely":
+            return (0.3, 0.3, 0.4, 1)
+        return (0.1, 0.2, 0.4, 1)
 
     def on_feed(self):
         if self.pet.dead:
@@ -86,7 +115,7 @@ class TamagotchiApp(App):
         self.update_ui(self.device_stats.read_device_stats())
 
     def on_check(self):
-        self.pet.message = "Checked device state."
+        self.pet.push_message("Checked device state.", 3)
         self.update_ui(self.device_stats.read_device_stats())
 
     def save_state(self):

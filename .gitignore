@@ -9,4 +9,5 @@ __pycache__/
 *.log
 *.json
 *.tmp
+/.venv
 /tamagotchi_store.json

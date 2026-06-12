@@ -1,5 +1,7 @@
 import socket
+import sys
 import time
+import urllib.request
 
 try:
     import psutil
@@ -32,6 +34,14 @@ class DeviceStats:
         }
 
     def _read_battery_pct(self):
+        if _HAS_PSUTIL:
+            try:
+                battery_info = psutil.sensors_battery()
+                if battery_info is not None and battery_info.percent is not None:
+                    return max(0, min(100, float(battery_info.percent)))
+            except Exception:
+                pass
+
         try:
             state = battery.status
             if isinstance(state, dict):
@@ -40,24 +50,38 @@ class DeviceStats:
                     return max(0, min(100, float(pct)))
         except Exception:
             pass
+
         return None
 
     def _read_charging_state(self):
+        if _HAS_PSUTIL:
+            try:
+                battery_info = psutil.sensors_battery()
+                if battery_info is not None and battery_info.power_plugged is not None:
+                    return bool(battery_info.power_plugged)
+            except Exception:
+                pass
+
         try:
             state = battery.status
             if isinstance(state, dict):
                 return bool(state.get("isCharging") or state.get("is_charging"))
         except Exception:
             pass
+
         return False
 
     def _read_cpu_percent(self):
         if _HAS_PSUTIL:
             try:
-                return psutil.cpu_percent(interval=None)
+                # Request a short sampling interval for more accurate desktop values.
+                return psutil.cpu_percent(interval=0.1)
             except Exception:
                 pass
 
+        return self._read_cpu_percent_proc()
+
+    def _read_cpu_percent_proc(self):
         try:
             with open("/proc/stat", "r") as stat_file:
                 line = stat_file.readline()
@@ -88,6 +112,9 @@ class DeviceStats:
             except Exception:
                 pass
 
+        return self._read_memory_percent_proc()
+
+    def _read_memory_percent_proc(self):
         try:
             info = {}
             with open("/proc/meminfo", "r") as mem_file:
@@ -109,12 +136,20 @@ class DeviceStats:
         return None
 
     def _probe_network(self):
-        host = ("8.8.8.8", 53)
         timeout = 2.0
         try:
             start = time.time()
-            sock = socket.create_connection(host, timeout)
-            sock.close()
+            with urllib.request.urlopen("https://www.google.com", timeout=timeout) as response:
+                if response.status == 200:
+                    latency = time.time() - start
+                    return True, max(0.0, min(5.0, latency))
+        except Exception:
+            pass
+
+        try:
+            start = time.time()
+            with socket.create_connection(("8.8.8.8", 53), timeout) as sock:
+                pass
             latency = time.time() - start
             return True, max(0.0, min(5.0, latency))
         except Exception:
