@@ -285,7 +285,7 @@ class Tamagotchi:
 
     def status_text(self):
         if self.dead:
-            return "The Tamagotchi is gone. Tap Feed to revive."
+            return "The Tamagotchi is gone. Tap Purge to revive."
         if self.sick:
             return "Not feeling well. Take care of the phone."
         if self.energy < 30:
